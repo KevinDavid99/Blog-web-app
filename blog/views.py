@@ -1,11 +1,13 @@
+from http.client import HTTPResponse
+from django.contrib import messages
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
-from.models import Post, CreateImages
+from.models import Post, PostComment
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin 
 from django.contrib.auth.models import User
-from.forms import ImagesPost
 from django.utils.text import Truncator
+from blog.forms import NewCommentForm
 # Create your views here.
 
 @login_required(login_url='login')
@@ -28,7 +30,7 @@ class PostListView(LoginRequiredMixin, ListView):
     template_name = 'blog/home.html'
     context_object_name = 'posts'[0:99]
     ordering = ['-date_posted']
-    paginate_by = 4
+    paginate_by = 5
     
 
 
@@ -36,7 +38,7 @@ class UserPostListView(LoginRequiredMixin, ListView):
     model = Post
     template_name = 'blog/user_posts.html'
     context_object_name = 'posts'
-    paginate_by = 4
+    paginate_by = 5
 
     def get_queryset(self):
         user = get_object_or_404(User, username=self.kwargs.get('username'))
@@ -45,11 +47,41 @@ class UserPostListView(LoginRequiredMixin, ListView):
 
 
 
-
+#getting the detail of the post
 class PostDetailView(LoginRequiredMixin, DetailView):
     model = Post
 
+    #for the comment section
+    def get_context_data(self, **kwargs):
+        data = super().get_context_data(**kwargs)
 
+        comments_connected = PostComment.objects.filter(post = self.get_object()).order_by('-date_posted')
+        data['comments'] = comments_connected
+        if self.request.user.is_authenticated:
+            data['comment_form'] = NewCommentForm(instance = self.request.user)
+        return data
+
+
+    def post(self, request, *args, **kwargs):
+        new_comment = PostComment(comment=request.POST.get('comment'), author=self.request.user, post = self.get_object())
+        new_comment.save()
+        messages.success(request, 'Your comment has been sucessfully submitted')
+        return self.get(self, request, *args, **kwargs)
+
+    
+# def delete_comment(request, pk):
+#     comment = PostComment.objects.get(id=pk)
+
+#     if request.user != comment.user:
+#         return HTTPResponse('<h2>You are not allowed to perform this action</h2>')
+
+#     if request.method == 'POST':
+#         comment.delete()
+#         return redirect('post-detail')
+#     return render(request, 'blog/delete.html', {'obj':comment})
+
+
+#Creating posts
 class PostCreateView(LoginRequiredMixin, CreateView):
     model = Post
     fields = ['title', 'content']
@@ -58,47 +90,8 @@ class PostCreateView(LoginRequiredMixin, CreateView):
         form.instance.author = self.request.user
         return super().form_valid(form)
 
-@login_required(login_url='login')
-def create_image(request):
-    if request.method == 'POST':
-        form = ImagesPost(request.POST, request.FILES)
-        if form.is_valid():
-            form.save()
-        #     posts = CreateImages.objects.all()
-            return redirect('pictures')
-        # return render(request, 'hyperapp/upload_pics.html', {'img_posts':posts})
-    else:
-        form = ImagesPost()
-    return render(request, 'blog/createimages_form.html', {'form':form})
 
-@login_required(login_url='login')
-def display_upload_pic(request):
-    posts = CreateImages.objects.all()
-    return render(request, 'blog/upload_pics.html', {'img_posts':posts})
-
-
-# class PictureDetailView(DetailView):
-#     model = CreateImages
-
-# def like_post(request):
-#     username = request.user.username
-#     image_id = request.GET.get('image_id')
-
-#     post = CreateImages.objects.get('image_id')
-
-#     like_filter = LikePost.objects.filter(image_id=image_id, username=username)
-#     if like_filter == None:
-#         new_like = LikePost.objects.create(image_id=image_id, username=username)
-#         new_like.save()
-#         CreateImages.no_of_likes = CreateImages.no_of_likes+1
-#         CreateImages.save()
-#         return redirect('home')
-#     else:
-#         like_filter.delete()
-#         CreateImages.no_of_likes = CreateImages.no_of_likes-1
-#         CreateImages.save()
-#         return redirect('home')
-
+#Updating posts
 class PostUpdateView(LoginRequiredMixin,UserPassesTestMixin, UpdateView):
     model = Post
     fields = ['title', 'content']
@@ -114,24 +107,13 @@ class PostUpdateView(LoginRequiredMixin,UserPassesTestMixin, UpdateView):
         else:
             return False
 
-
+#Deleting Posts
 class PostDeleteView(LoginRequiredMixin, UserPassesTestMixin,DeleteView):
     model = Post
     success_url = '/'
     def test_func(self):
         post = self.get_object()
         if self.request.user == post.author:
-            return True
-        else:
-            return False
-
-
-class ImageDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
-    model = CreateImages
-    success_url = '/'
-    def test_func(self):
-        image = self.get_object()
-        if self.request.user == image:
             return True
         else:
             return False

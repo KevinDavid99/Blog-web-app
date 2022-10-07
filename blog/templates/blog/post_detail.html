@@ -1,10 +1,13 @@
 {% extends "blog/base.html" %}
+
+{% load crispy_forms_tags %}
+
 {% block content %}
     <article class="media content-section">
       <img class="rounded-circle article-img" src="{{ object.author.profile.image.url }}">
         <div class="media-body">
           <div class="article-metadata">
-            <a class="mr-2" href="{% url 'user-posts' object.author.username %}">{{ object.author }}</a>
+            <a class="mr-2" href="{% url 'user-posts' object.author.username %}">@{{ object.author }}</a>
             <small class="text-muted">{{ object.date_posted|date:'F d, Y' }}</small>
             {% if object.author == user %}
                 <div>
@@ -15,6 +18,49 @@
           </div>
           <h2 class="article-title" >{{ object.title }}</h2>
           <p class="article-content">{{ object.content }}</p>
+          <hr>
+          <!--COMMENTS-->
+          <h3>Leave a comment!</h3>
+          <div id="comments-section">
+
+            {% if comments %}
+            <strong class="text-secondary">{{ object.number_of_comments }} Comment(s)</strong>
+            <hr>
+            <ul>
+              {% for comment in comments %}
+              <li>
+                <div>
+                  <span>
+                    <strong class="text-info">{{ comment.author }}</strong>
+                    <small class="text-muted">{{ comment.date_posted }}</small>
+                  </span>
+                  <p style="color: white" >
+                    {{ comment.comment|safe }} 
+                    {% if user == comment.user %}
+                    <a class="btn btn-danger btn-sm mt-1 mb-1" href="{% url 'delete-comment' comment.id %}">Delete</a>
+                    {% endif %}
+                  </p>
+                </div>
+              </li>
+              {% endfor %}
+            </ul>
+            {% else %}
+              <strong class="text-secondary">No comments yet...</strong>
+            {% endif %}
+
+            <!--form to comment-->
+            {% if user.is_authenticated %}
+            <form method="POST">
+              {% csrf_token %}
+              <div class="form-group">
+                {{ comment_form|crispy }}
+                <button class="btn btn-info" type="submit">Submit<i class="fas fa-comments"></i></button>
+              </div>
+            </form>
+            {% else %}
+            <a class="btn btn-outline-info" href="{% url 'login' %}">Login to comment</a><br>
+            {% endif %}
+          </div>
         </div>
     </article>
 {% endblock content %}

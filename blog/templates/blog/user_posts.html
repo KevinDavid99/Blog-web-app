@@ -1,13 +1,13 @@
 {% extends 'blog/base.html' %}
 
 {% block content %}
-    <h1 class="mb-3">Posts by {{ view.kwargs.username }} ({{ page_obj.paginator.count }})</h1>
+    <h1 class="mb-3">{{ page_obj.paginator.count }} Post(s) by {{ view.kwargs.username }}</h1>
     {% for post in posts %}
         <article class="media content-section">
         <img class="rounded-circle article-img" src="{{ post.author.profile.image.url }}" style="max-height:89px;" >
             <div class="media-body">
             <div class="article-metadata">
-                <a class="mr-2" href="{% url 'user-posts' post.author.username %}">{{ post.author }}</a>
+                <a class="mr-2" href="{% url 'user-posts' post.author.username %}">@{{ post.author }}</a>
                 <small class="text-muted">{{ post.date_posted|date:'F d, Y' }}</small>
             </div>
             <h2><a class="article-title" href="{% url 'post-detail' post.id %}">{{ post.title }}</a></h2>
@@ -15,15 +15,7 @@
             <a class="btn btn-outline-info" href="#"><i class="fa-solid fa-heart"></i></a>  
             </div>
 
-    <!-- {% for post in posts %}
-
-        <div>
-            <a class="mr-2" href="#">{{ post.author }}</a>
-            <small class="text-muted">{{ post.date_posted|date:'F d, Y' }}</small>
-            <img src="{{post.image.url}}" alt="connect" style="max-height:300px">
-        </div>
-
-    {% endfor %} -->
+  
         </article>
     {% endfor %}
     {% if is_paginated %}

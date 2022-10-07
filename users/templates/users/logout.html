@@ -3,6 +3,6 @@
 {% block content %}
 <h2>You have been logged out</h2>
         <div class="border-top pt-3">
-            <small class="btn btn-outline-info"><a href="{% url 'login' %}">Login again</a></small>
+            <a href="{% url 'login' %}" ><button class="btn btn-outline-info" type="submit">Login again</button></a>
         </div>
 {% endblock content %}

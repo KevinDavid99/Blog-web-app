@@ -1,7 +1,7 @@
-from django.forms import ModelForm
-from.models import CreateImages
+from django import forms
+from.models import PostComment
 
-class ImagesPost(ModelForm):
+class NewCommentForm(forms.ModelForm):
     class Meta:
-        model = CreateImages
-        fields = ['author', 'caption', 'image', 'created_at']
+        model = PostComment
+        fields = ['comment']

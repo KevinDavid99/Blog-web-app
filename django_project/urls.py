@@ -28,6 +28,7 @@ urlpatterns = [
     path('profile/', user_views.profile, name='profile'),
 
     path('', include('blog.urls')),
+    path('api/', include('blog.api.urls'))
 ]
 
 if settings.DEBUG:
