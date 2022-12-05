@@ -117,3 +117,13 @@ class PostDeleteView(LoginRequiredMixin, UserPassesTestMixin,DeleteView):
             return True
         else:
             return False
+
+class PostCommentDeleteView(LoginRequiredMixin, UserPassesTestMixin,DeleteView):
+    model = PostComment
+    success_url = '/'
+    def test_func(self):
+        comment = self.get_object()
+        if self.request.user == comment.user:
+            return True
+        else:
+            return False
